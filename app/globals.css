@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fredoka:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Fredoka', 'Space Grotesk', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-handwritten: 'Caveat', cursive;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: #F5F0E6;
+  color: #111111;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+}
+
+/* Custom Neo-Brutalist Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F0E6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #111111;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF5CA8;
+}
+
+/* Hide scrollbar for touch carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile Touch Tap Targets */
+.touch-press {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.touch-press:active {
+  transform: scale(0.97) translate(1px, 1px);
+}
+
+/* Brutal Button Utility Classes */
+.btn-brutal {
+  border: 3px solid #111111;
+  box-shadow: 4px 4px 0px #111111;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-brutal:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #111111;
+}
+
+.btn-brutal:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #111111;
+}
+
+/* Neo-Brutalist Card Utility */
+.card-brutal {
+  background-color: #FFFDF9;
+  border: 3px solid #111111;
+  box-shadow: 5px 5px 0px #111111;
+  border-radius: 20px;
+}
+
+/* Sticker Washi Tape */
+.washi-tape {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px dashed rgba(17, 17, 17, 0.4);
+}
