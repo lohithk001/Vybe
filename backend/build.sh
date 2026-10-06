@@ -12,4 +12,7 @@ python manage.py collectstatic --no-input
 echo "==> Applying database migrations..."
 python manage.py migrate --no-input
 
+echo "==> Seeding initial catalog metadata (moods & genres)..."
+python manage.py seed_moods
+
 echo "==> Render build finished successfully!"
