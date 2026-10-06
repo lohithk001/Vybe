@@ -1,0 +1,21 @@
+# Core Django and DRF
+Django>=5.1,<6.2
+djangorestframework>=3.15,<4.0
+djangorestframework-simplejwt>=5.3,<6.0
+drf-spectacular>=0.28,<1.0
+
+# CORS & Environment
+django-cors-headers>=4.3,<5.0
+django-environ>=0.11,<1.0
+
+# Database & Caching
+psycopg2-binary>=2.9,<3.0
+django-redis>=5.4,<8.0
+redis>=5.0,<9.0
+
+# Static files
+whitenoise>=6.6,<7.0
+
+# Music & AI (pinned for upcoming phases)
+ytmusicapi>=1.8.0
+google-genai>=1.0.0
