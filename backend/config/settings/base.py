@@ -173,6 +173,7 @@ REST_FRAMEWORK = {
         'anon': '100/minute',
         'user': '1000/minute',
         'auth': '30/minute',
+        'search': '60/minute',
     },
 }
 

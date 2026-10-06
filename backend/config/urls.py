@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/v1/', include([
         path('', include('apps.core.urls')),
         path('auth/', include('apps.users.urls')),
+        path('music/', include('apps.music.urls')),
         
         # OpenAPI Schema & Interactive Docs
         path('schema/', SpectacularAPIView.as_view(), name='schema'),
