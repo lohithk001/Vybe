@@ -7,14 +7,15 @@ export interface Track {
   duration: number; // in seconds
   durationFormatted: string; // '3:20'
   accentColor: string; // '#55D6BE'
-  illustration: 'chill' | 'lockin' | 'mainchar' | 'unhinged' | 'vinyl' | 'cassette' | 'lofi' | 'retro';
-  mood: 'chill' | 'lockin' | 'mainchar' | 'unhinged' | 'focus' | 'party' | 'sad' | 'workout';
+  illustration: 'chill' | 'lockin' | 'mainchar' | 'unhinged' | 'vinyl' | 'cassette' | 'lofi' | 'retro' | string;
+  mood: 'chill' | 'lockin' | 'mainchar' | 'unhinged' | 'focus' | 'party' | 'sad' | 'workout' | string;
   bpm: number;
-  freqKey: number; // Synth base frequency Hz
-  synthWave: 'sine' | 'triangle' | 'sawtooth' | 'square';
+  freqKey?: number; // Synth base frequency Hz
+  synthWave?: 'sine' | 'triangle' | 'sawtooth' | 'square';
   lyrics?: string[];
   youtubeId?: string;
   playCount: string;
+  thumbnailUrl?: string;
 }
 
 export interface Playlist {

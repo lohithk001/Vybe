@@ -1,8 +1,10 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PLAYLISTS, TRACKS } from '@/data/mockData';
+import { PLAYLISTS } from '@/data/mockData';
+import { Track } from '@/types/music';
+import { searchTracks, fetchMoodSongs } from '@/services/api';
 import { useMusicPlayer } from '@/context/MusicPlayerContext';
 import { SongRow } from '@/components/cards/SongRow';
 import { TrackArtwork } from '@/components/doodles/OriginalIllustrations';
@@ -25,7 +27,24 @@ export default function PlaylistPage({
     PLAYLISTS.find((p) => p.id === id) ||
     PLAYLISTS[0];
 
-  const tracks = playlist.tracks.length > 0 ? playlist.tracks : TRACKS.slice(0, 5);
+  const [tracks, setTracks] = useState<Track[]>(playlist.tracks || []);
+
+  useEffect(() => {
+    // If it's a mood playlist, fetch mood songs, otherwise search playlist title
+    const titleLower = playlist.title.toLowerCase();
+    const moodSlugs = ['chill', 'workout', 'sad', 'focus', 'party'];
+    const matchedMood = moodSlugs.find((m) => titleLower.includes(m));
+
+    if (matchedMood) {
+      fetchMoodSongs(matchedMood).then((res) => {
+        if (res && res.length > 0) setTracks(res);
+      });
+    } else {
+      searchTracks(playlist.title, 'songs').then((res) => {
+        if (res && res.length > 0) setTracks(res);
+      });
+    }
+  }, [id, playlist.title]);
 
   const handlePlayAll = () => {
     if (tracks.length > 0) {
@@ -151,14 +170,20 @@ export default function PlaylistPage({
         </div>
 
         <div className="space-y-2">
-          {tracks.map((track, idx) => (
-            <SongRow
-              key={`${track.id}-${idx}`}
-              track={track}
-              index={idx}
-              playlistQueue={tracks}
-            />
-          ))}
+          {tracks.length > 0 ? (
+            tracks.map((track, idx) => (
+              <SongRow
+                key={`${track.id}-${idx}`}
+                track={track}
+                index={idx}
+                playlistQueue={tracks}
+              />
+            ))
+          ) : (
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="h-14 bg-[#F5F0E6] rounded-xl border-2 border-[#111111]/20 animate-pulse" />
+            ))
+          )}
         </div>
       </section>
     </div>

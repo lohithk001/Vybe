@@ -14,6 +14,7 @@ import {
   Disc,
   Users,
   Clock,
+  User,
 } from 'lucide-react';
 import { LogoLink } from './VybeLogo';
 import { HandwrittenNote, DoodleCrown } from '@/components/doodles/Doodles';
@@ -29,6 +30,7 @@ export function Sidebar() {
     { name: 'Discover', href: '/discover', icon: Compass, accent: '#FF5CA8' },
     { name: 'AI DJ', href: '/ai-dj', icon: Sparkles, accent: '#8E7CFF', badge: '✦ NEW' },
     { name: 'Library', href: '/library', icon: Library, accent: '#FF8A3D' },
+    { name: 'Profile', href: '/profile', icon: User, accent: '#6DB7FF' },
   ];
 
   const libraryItems = [

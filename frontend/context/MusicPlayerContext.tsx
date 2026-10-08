@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { Track, Playlist } from '@/types/music';
-import { TRACKS, PLAYLISTS } from '@/data/mockData';
+import { PLAYLISTS } from '@/data/mockData';
+import { fetchTrendingTracks } from '@/services/api';
 import confetti from 'canvas-confetti';
 
 interface MusicPlayerContextType {
@@ -15,7 +16,9 @@ interface MusicPlayerContextType {
   isShuffle: boolean;
   isRepeat: boolean;
   queue: Track[];
+  history: Track[];
   likedTrackIds: string[];
+  likedTracks: Track[];
   userPlaylists: Playlist[];
   isNowPlayingOpen: boolean;
   lyricsOpen: boolean;
@@ -34,7 +37,7 @@ interface MusicPlayerContextType {
   toggleMute: () => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
-  toggleLike: (trackId: string) => void;
+  toggleLike: (trackId: string, trackObj?: Track) => void;
   isLiked: (trackId: string) => boolean;
   setIsNowPlayingOpen: (open: boolean) => void;
   toggleLyrics: () => void;
@@ -45,30 +48,124 @@ interface MusicPlayerContextType {
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | null>(null);
 
+const DEFAULT_TRACK: Track = {
+  id: '',
+  title: 'Select a Track',
+  artist: 'VYBE Radio',
+  artistId: 'vybe',
+  album: 'Live Stream',
+  duration: 180,
+  durationFormatted: '3:00',
+  accentColor: '#FF5CA8',
+  illustration: 'vinyl',
+  mood: 'mainchar',
+  bpm: 120,
+  playCount: '0',
+  thumbnailUrl: '',
+};
+
 export function MusicPlayerProvider({ children }: { children: React.ReactNode }) {
-  const [currentTrack, setCurrentTrack] = useState<Track>(TRACKS[0]);
+  const [currentTrack, setCurrentTrack] = useState<Track>(DEFAULT_TRACK);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(102); // 1:42 starting position for instant poster look
-  const [duration, setDuration] = useState<number>(TRACKS[0].duration);
+  const [progress, setProgress] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(180);
   const [volume, setVolumeState] = useState<number>(0.8);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isShuffle, setIsShuffle] = useState<boolean>(false);
   const [isRepeat, setIsRepeat] = useState<boolean>(false);
-  const [queue, setQueue] = useState<Track[]>(TRACKS);
-  const [likedTrackIds, setLikedTrackIds] = useState<string[]>(['track-1', 'track-9']);
+  const [queue, setQueue] = useState<Track[]>([]);
+  const [history, setHistory] = useState<Track[]>([]);
+  const [likedTrackIds, setLikedTrackIds] = useState<string[]>([]);
+  const [likedTracks, setLikedTracks] = useState<Track[]>([]);
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>(PLAYLISTS);
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState<boolean>(false);
   const [lyricsOpen, setLyricsOpen] = useState<boolean>(false);
   const [activeMood, setActiveMood] = useState<string | null>(null);
   const [audioFrequencyData, setAudioFrequencyData] = useState<number[]>(Array(16).fill(20));
 
-  // Audio synthesis nodes
+  // Initialize queue dynamically from backend real trending songs
+  useEffect(() => {
+    fetchTrendingTracks().then((tracks) => {
+      if (tracks && tracks.length > 0) {
+        setQueue(tracks);
+        setCurrentTrack((curr) => (!curr || !curr.id ? tracks[0] : curr));
+        setDuration((d) => (d === 0 || d === 180 ? tracks[0].duration : d));
+      }
+    });
+  }, []);
+
+  // Audio synthesis nodes & YouTube Player
   const audioCtxRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
   const synthTimerRef = useRef<NodeJS.Timeout | null>(null);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const noteIndexRef = useRef<number>(0);
+  const ytPlayerRef = useRef<any>(null);
+
+  // Initialize YouTube Iframe Player
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Dynamically create an isolated container outside of React JSX reconciliation
+    let container = document.getElementById('vybe-yt-audio-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vybe-yt-audio-container';
+      container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
+      const playerDiv = document.createElement('div');
+      playerDiv.id = 'vybe-youtube-audio-player';
+      container.appendChild(playerDiv);
+      document.body.appendChild(container);
+    }
+
+    const setupPlayer = () => {
+      if ((window as any).YT && (window as any).YT.Player) {
+        try {
+          if (!ytPlayerRef.current) {
+            ytPlayerRef.current = new (window as any).YT.Player('vybe-youtube-audio-player', {
+              height: '1',
+              width: '1',
+              videoId: currentTrack.youtubeId || '1a3REFH83WA',
+              playerVars: {
+                autoplay: 0,
+                controls: 0,
+                disablekb: 1,
+                fs: 0,
+                modestbranding: 1,
+                playsinline: 1,
+                rel: 0,
+              },
+              events: {
+                onReady: (e: any) => {
+                  try {
+                    e.target.setVolume(volume * 100);
+                  } catch {}
+                },
+                onStateChange: (e: any) => {
+                  // 0 = YT.PlayerState.ENDED
+                  if (e.data === 0) {
+                    nextTrack();
+                  }
+                },
+              },
+            });
+          }
+        } catch (e) {
+          console.warn('YT player error:', e);
+        }
+      }
+    };
+
+    if (!(window as any).YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      (window as any).onYouTubeIframeAPIReady = setupPlayer;
+      document.head.appendChild(tag);
+    } else {
+      setupPlayer();
+    }
+  }, []);
 
   // Initialize Web Audio Synth safely on user interaction
   const initAudio = useCallback(() => {
@@ -88,7 +185,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     }
   }, [isMuted, volume]);
 
-  // Real Synthesizer chord/beat sequence for track
+  // Real Synthesizer chord/beat sequence for track fallback
   const triggerTone = useCallback(() => {
     if (!audioCtxRef.current || !masterGainRef.current) return;
     const ctx = audioCtxRef.current;
@@ -174,15 +271,28 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
   // Handle Playback Interval & Synth loop
   useEffect(() => {
     if (isPlaying) {
-      initAudio();
-      const intervalMs = Math.max(180, Math.round(60000 / (currentTrack.bpm * 2)));
+      if (!currentTrack.youtubeId) {
+        initAudio();
+        const intervalMs = Math.max(180, Math.round(60000 / (currentTrack.bpm * 2)));
 
-      synthTimerRef.current = setInterval(() => {
-        triggerTone();
-      }, intervalMs);
+        synthTimerRef.current = setInterval(() => {
+          triggerTone();
+        }, intervalMs);
+      }
 
       progressTimerRef.current = setInterval(() => {
         setProgress((prev) => {
+          if (currentTrack.youtubeId && ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
+            try {
+              const cur = Math.floor(ytPlayerRef.current.getCurrentTime());
+              if (cur >= duration && duration > 0) {
+                nextTrack();
+                return 0;
+              }
+              if (cur > 0) return cur;
+            } catch {}
+          }
+
           if (prev >= duration) {
             nextTrack();
             return 0;
@@ -204,6 +314,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
   // Volume update
   const setVolume = (level: number) => {
     setVolumeState(level);
+    if (ytPlayerRef.current && typeof ytPlayerRef.current.setVolume === 'function') {
+      try { ytPlayerRef.current.setVolume(level * 100); } catch {}
+    }
     if (masterGainRef.current && audioCtxRef.current) {
       masterGainRef.current.gain.setValueAtTime(isMuted ? 0 : level * 0.15, audioCtxRef.current.currentTime);
     }
@@ -212,6 +325,12 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
   const toggleMute = () => {
     setIsMuted((prev) => {
       const next = !prev;
+      if (ytPlayerRef.current) {
+        try {
+          if (next) ytPlayerRef.current.mute();
+          else ytPlayerRef.current.unMute();
+        } catch {}
+      }
       if (masterGainRef.current && audioCtxRef.current) {
         masterGainRef.current.gain.setValueAtTime(next ? 0 : volume * 0.15, audioCtxRef.current.currentTime);
       }
@@ -221,25 +340,59 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
 
   // Play track
   const playTrack = (track: Track, newQueue?: Track[]) => {
-    initAudio();
     setCurrentTrack(track);
+    setHistory((prev) => [track, ...prev.filter((t) => t.id !== track.id)].slice(0, 50));
     setDuration(track.duration);
     setProgress(0);
     setIsPlaying(true);
     if (newQueue) {
       setQueue(newQueue);
     }
+
+    if (track.youtubeId && ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === 'function') {
+      try {
+        ytPlayerRef.current.loadVideoById(track.youtubeId);
+        ytPlayerRef.current.playVideo();
+      } catch (err) {
+        console.warn('Failed to load video into YT player:', err);
+      }
+    } else {
+      initAudio();
+    }
   };
 
   const togglePlay = () => {
-    initAudio();
-    setIsPlaying((prev) => !prev);
+    setIsPlaying((prev) => {
+      const next = !prev;
+      if (currentTrack.youtubeId && ytPlayerRef.current) {
+        try {
+          if (next && typeof ytPlayerRef.current.playVideo === 'function') {
+            ytPlayerRef.current.playVideo();
+          } else if (!next && typeof ytPlayerRef.current.pauseVideo === 'function') {
+            ytPlayerRef.current.pauseVideo();
+          }
+        } catch {}
+      } else {
+        initAudio();
+      }
+      return next;
+    });
   };
 
-  const pause = () => setIsPlaying(false);
+  const pause = () => {
+    setIsPlaying(false);
+    if (currentTrack.youtubeId && ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === 'function') {
+      try { ytPlayerRef.current.pauseVideo(); } catch {}
+    }
+  };
+
   const resume = () => {
-    initAudio();
     setIsPlaying(true);
+    if (currentTrack.youtubeId && ytPlayerRef.current && typeof ytPlayerRef.current.playVideo === 'function') {
+      try { ytPlayerRef.current.playVideo(); } catch {}
+    } else {
+      initAudio();
+    }
   };
 
   const nextTrack = () => {
@@ -258,7 +411,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
 
   const prevTrack = () => {
     if (progress > 3) {
-      setProgress(0);
+      seek(0);
       return;
     }
     const currentIndex = queue.findIndex((t) => t.id === currentTrack.id);
@@ -267,14 +420,18 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
   };
 
   const seek = (seconds: number) => {
-    setProgress(Math.min(duration, Math.max(0, seconds)));
+    const s = Math.min(duration, Math.max(0, seconds));
+    setProgress(s);
+    if (currentTrack.youtubeId && ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
+      try { ytPlayerRef.current.seekTo(s, true); } catch {}
+    }
   };
 
   const toggleShuffle = () => setIsShuffle((prev) => !prev);
   const toggleRepeat = () => setIsRepeat((prev) => !prev);
 
   // Like track with particle confetti burst
-  const toggleLike = (trackId: string) => {
+  const toggleLike = (trackId: string, trackObj?: Track) => {
     setLikedTrackIds((prev) => {
       const isAlreadyLiked = prev.includes(trackId);
       if (!isAlreadyLiked) {
@@ -288,8 +445,17 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         } catch {
           // confetti fallback
         }
+        const target =
+          trackObj ||
+          queue.find((t) => t.id === trackId) ||
+          (currentTrack.id === trackId ? currentTrack : null);
+
+        if (target) {
+          setLikedTracks((curr) => [...curr.filter((t) => t.id !== trackId), target]);
+        }
         return [...prev, trackId];
       } else {
+        setLikedTracks((curr) => curr.filter((t) => t.id !== trackId));
         return prev.filter((id) => id !== trackId);
       }
     });
@@ -301,7 +467,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
 
   // Add track to playlist
   const addTrackToPlaylist = (trackId: string, playlistId: string) => {
-    const track = TRACKS.find((t) => t.id === trackId);
+    const track =
+      queue.find((t) => t.id === trackId) ||
+      (currentTrack.id === trackId ? currentTrack : null);
     if (!track) return;
 
     setUserPlaylists((prev) =>
@@ -350,7 +518,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         isShuffle,
         isRepeat,
         queue,
+        history,
         likedTrackIds,
+        likedTracks,
         userPlaylists,
         isNowPlayingOpen,
         lyricsOpen,

@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useMusicPlayer } from '@/context/MusicPlayerContext';
 import { PlaylistCard } from '@/components/cards/PlaylistCard';
 import { SongRow } from '@/components/cards/SongRow';
-import { TRACKS, ARTISTS } from '@/data/mockData';
+import { ARTISTS } from '@/data/mockData';
 import { Plus, Heart, ListMusic, Disc, Users, Clock, Sparkles, X } from 'lucide-react';
 import { DoodleCrown } from '@/components/doodles/Doodles';
 import Link from 'next/link';
@@ -14,16 +14,27 @@ function LibraryPageContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'playlists';
 
-  const { userPlaylists, likedTrackIds, createPlaylist } = useMusicPlayer();
+  const { userPlaylists, likedTrackIds, likedTracks, createPlaylist, history, queue } = useMusicPlayer();
   const [activeTab, setActiveTab] = useState<'playlists' | 'liked' | 'albums' | 'artists' | 'history'>(
     initialTab as 'playlists' | 'liked' | 'albums' | 'artists' | 'history'
   );
 
+  const dynamicAlbums = React.useMemo(() => {
+    const combined = [...likedTracks, ...history, ...queue];
+    const seen = new Set<string>();
+    const list: typeof combined = [];
+    for (const t of combined) {
+      if (t.album && !seen.has(t.album)) {
+        seen.add(t.album);
+        list.push(t);
+      }
+    }
+    return list;
+  }, [likedTracks, history, queue]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
-
-  const likedTracks = TRACKS.filter((t) => likedTrackIds.includes(t.id));
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +48,9 @@ function LibraryPageContent() {
   const tabs = [
     { id: 'playlists', label: 'Playlists', icon: ListMusic, color: '#FFE229' },
     { id: 'liked', label: `Liked Songs (${likedTrackIds.length})`, icon: Heart, color: '#FF5CA8' },
-    { id: 'albums', label: 'Albums', icon: Disc, color: '#8E7CFF' },
+    { id: 'albums', label: `Albums (${dynamicAlbums.length})`, icon: Disc, color: '#8E7CFF' },
     { id: 'artists', label: 'Artists', icon: Users, color: '#55D6BE' },
-    { id: 'history', label: 'History', icon: Clock, color: '#FF8A3D' },
+    { id: 'history', label: `History (${history.length})`, icon: Clock, color: '#FF8A3D' },
   ];
 
   return (
@@ -162,26 +173,45 @@ function LibraryPageContent() {
         )}
 
         {activeTab === 'albums' && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {TRACKS.slice(0, 8).map((track) => (
-              <div
-                key={track.id}
-                className="p-4 bg-[#FFFDF9] border-[3px] border-[#111111] shadow-brutal-sm rounded-2xl flex flex-col"
-              >
-                <div
-                  className="w-full aspect-square rounded-xl border-2 border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center font-display font-black text-xl mb-3"
-                  style={{ backgroundColor: track.accentColor }}
-                >
-                  {track.album[0]}
-                </div>
-                <h4 className="font-display font-black text-sm text-[#111111] truncate">
-                  {track.album}
-                </h4>
-                <p className="font-sans text-xs text-[#111111]/70 truncate mt-0.5">
-                  {track.artist}
+          <div>
+            {dynamicAlbums.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {dynamicAlbums.map((track) => (
+                  <div
+                    key={`${track.id}-${track.album}`}
+                    className="p-4 bg-[#FFFDF9] border-[3px] border-[#111111] shadow-brutal-sm rounded-2xl flex flex-col group hover:-translate-y-1 transition-transform"
+                  >
+                    <div
+                      className="w-full aspect-square rounded-xl border-2 border-[#111111] shadow-[2px_2px_0px_#111111] overflow-hidden flex items-center justify-center font-display font-black text-2xl mb-3 relative"
+                      style={{ backgroundColor: track.accentColor }}
+                    >
+                      {track.thumbnailUrl ? (
+                        <img
+                          src={track.thumbnailUrl}
+                          alt={track.album}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{track.album[0]}</span>
+                      )}
+                    </div>
+                    <h4 className="font-display font-black text-sm text-[#111111] truncate">
+                      {track.album}
+                    </h4>
+                    <p className="font-sans text-xs text-[#111111]/70 truncate mt-0.5">
+                      {track.artist}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center bg-[#FFFDF9] border-[3px] border-[#111111] shadow-brutal-sm rounded-2xl">
+                <p className="font-display font-black text-lg text-[#111111]">NO ALBUMS IN YOUR VAULT YET</p>
+                <p className="font-sans font-bold text-xs text-[#111111]/70 mt-1">
+                  Start listening or liking tracks to automatically build your album collection.
                 </p>
               </div>
-            ))}
+            )}
           </div>
         )}
 
@@ -190,14 +220,23 @@ function LibraryPageContent() {
             <span className="font-mono text-xs font-black uppercase text-[#111111]/60 block mb-2">
               RECENTLY PLAYED SESSIONS:
             </span>
-            {TRACKS.slice(0, 7).map((track, idx) => (
-              <SongRow
-                key={track.id}
-                track={track}
-                index={idx}
-                playlistQueue={TRACKS.slice(0, 7)}
-              />
-            ))}
+            {history.length > 0 ? (
+              history.map((track, idx) => (
+                <SongRow
+                  key={`history-${track.id}-${idx}`}
+                  track={track}
+                  index={idx}
+                  playlistQueue={history}
+                />
+              ))
+            ) : (
+              <div className="p-8 text-center bg-[#FFFDF9] border-[3px] border-[#111111] shadow-brutal-sm rounded-2xl">
+                <p className="font-display font-black text-lg text-[#111111]">NO RECENT SESSIONS</p>
+                <p className="font-sans font-bold text-xs text-[#111111]/70 mt-1">
+                  Play any song from Home, Discover, or AI DJ to record your live listening history.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

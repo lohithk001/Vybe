@@ -4,7 +4,7 @@ import React from 'react';
 import { MoodConfig } from '@/types/music';
 import { Play, Sparkles } from 'lucide-react';
 import { useMusicPlayer } from '@/context/MusicPlayerContext';
-import { TRACKS } from '@/data/mockData';
+import { fetchMoodSongs } from '@/services/api';
 import {
   ChillCharacter,
   LockInCharacter,
@@ -17,12 +17,16 @@ export function MoodCard({ mood, index }: { mood: MoodConfig; index: number }) {
 
   const isCurrentMoodPlaying = isPlaying && currentTrack.mood === mood.id;
 
-  const handlePlayMood = (e: React.MouseEvent) => {
+  const handlePlayMood = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setActiveMood(mood.id);
-    const matchingTracks = TRACKS.filter((t) => t.mood === mood.id);
-    if (matchingTracks.length > 0) {
-      playTrack(matchingTracks[0], matchingTracks);
+    try {
+      const realMoodTracks = await fetchMoodSongs(mood.id);
+      if (realMoodTracks && realMoodTracks.length > 0) {
+        playTrack(realMoodTracks[0], realMoodTracks);
+      }
+    } catch (err) {
+      console.warn('Mood fetch error:', err);
     }
   };
 

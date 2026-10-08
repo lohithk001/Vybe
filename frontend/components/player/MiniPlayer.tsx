@@ -39,12 +39,20 @@ export function MiniPlayer() {
           className="w-11 h-11 rounded-xl border-2 border-[#111111] shadow-[2px_2px_0px_#111111] overflow-hidden flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: currentTrack.accentColor }}
         >
-          <TrackArtwork
-            type={currentTrack.illustration}
-            color={currentTrack.accentColor}
-            isPlaying={isPlaying}
-            className="w-full h-full scale-105"
-          />
+          {currentTrack.thumbnailUrl ? (
+            <img
+              src={currentTrack.thumbnailUrl}
+              alt={currentTrack.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <TrackArtwork
+              type={currentTrack.illustration}
+              color={currentTrack.accentColor}
+              isPlaying={isPlaying}
+              className="w-full h-full scale-105"
+            />
+          )}
         </div>
 
         <div className="min-w-0 flex-1">

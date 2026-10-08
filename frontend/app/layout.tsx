@@ -11,6 +11,11 @@ import { NowPlayingModal } from '@/components/player/NowPlayingModal';
 export const metadata: Metadata = {
   title: 'VYBE ✦ Your music. Your vibe.',
   description: 'Neo-brutalist Gen-Z music streaming. Your music. Your vibe.',
+  icons: {
+    icon: '/vybe-logo.png',
+    shortcut: '/vybe-logo.png',
+    apple: '/vybe-logo.png',
+  },
 };
 
 export default function RootLayout({

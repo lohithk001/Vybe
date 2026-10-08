@@ -150,12 +150,20 @@ export function NowPlayingContent({
 
         {/* Center Artwork */}
         <div className="relative w-full h-full flex items-center justify-center">
-          <TrackArtwork
-            type={currentTrack.illustration}
-            color={currentTrack.accentColor}
-            isPlaying={isPlaying}
-            className="w-full h-full scale-105"
-          />
+          {currentTrack.thumbnailUrl ? (
+            <img
+              src={currentTrack.thumbnailUrl}
+              alt={currentTrack.title}
+              className="w-full h-full object-cover rounded-xl"
+            />
+          ) : (
+            <TrackArtwork
+              type={currentTrack.illustration}
+              color={currentTrack.accentColor}
+              isPlaying={isPlaying}
+              className="w-full h-full scale-105"
+            />
+          )}
         </div>
 
         {/* Overlay Lyrics Preview if open */}
@@ -353,8 +361,13 @@ export function NowPlayingContent({
 
 export function NowPlayingModal() {
   const { isNowPlayingOpen, setIsNowPlayingOpen } = useMusicPlayer();
+  const [mounted, setMounted] = useState(false);
 
-  if (!isNowPlayingOpen) return null;
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !isNowPlayingOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">

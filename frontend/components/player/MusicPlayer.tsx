@@ -75,12 +75,20 @@ export function MusicPlayer() {
               className="relative w-14 h-14 rounded-xl border-[2.5px] border-[#111111] shadow-[3px_3px_0px_#111111] cursor-pointer group flex-shrink-0 overflow-hidden flex items-center justify-center transition-transform hover:scale-105"
               style={{ backgroundColor: currentTrack.accentColor }}
             >
-              <TrackArtwork
-                type={currentTrack.illustration}
-                color={currentTrack.accentColor}
-                isPlaying={isPlaying}
-                className="w-full h-full"
-              />
+              {currentTrack.thumbnailUrl ? (
+                <img
+                  src={currentTrack.thumbnailUrl}
+                  alt={currentTrack.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <TrackArtwork
+                  type={currentTrack.illustration}
+                  color={currentTrack.accentColor}
+                  isPlaying={isPlaying}
+                  className="w-full h-full"
+                />
+              )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                 <Maximize2 className="w-5 h-5 text-white" />
               </div>

@@ -17,6 +17,8 @@ class AuthService:
         return {
             'accessToken': str(refresh.access_token),
             'refreshToken': str(refresh),
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
             'tokenType': 'Bearer',
         }
 

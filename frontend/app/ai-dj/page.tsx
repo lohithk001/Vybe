@@ -64,7 +64,7 @@ export default function AiDjPage() {
           </div>
 
           <div className="font-mono text-[11px] font-bold text-[#111111]/70 flex justify-between">
-            <span>KEY: {currentTrack.freqKey.toFixed(1)} Hz</span>
+            <span>KEY: {currentTrack.freqKey ? currentTrack.freqKey.toFixed(1) : '440.0'} Hz</span>
             <span>BPM: {currentTrack.bpm}</span>
           </div>
         </div>

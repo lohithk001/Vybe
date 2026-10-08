@@ -3,7 +3,37 @@
 import React from 'react';
 import Link from 'next/link';
 
-// Playful Vybe Crown / Music Vibe Wave Icon
+// Official VYBE Graphic Logo
+export function VybeLogo({
+  size = 'md',
+  className = '',
+  alt = 'VYBE Logo',
+}: {
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+  alt?: string;
+}) {
+  const sizeClasses = {
+    xs: 'h-6 sm:h-7',
+    sm: 'h-8 sm:h-9',
+    md: 'h-11 sm:h-12',
+    lg: 'h-14 sm:h-16',
+    xl: 'h-20 sm:h-24',
+  };
+
+  return (
+    <div className={`relative inline-flex items-center select-none group ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/vybe-logo.png"
+        alt={alt}
+        className={`${sizeClasses[size]} w-auto object-contain filter drop-shadow-[2.5px_2.5px_0px_#111111] transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-2 active:scale-95`}
+      />
+    </div>
+  );
+}
+
+// Icon representation
 export function VybeIcon({
   size = 36,
   className = '',
@@ -13,86 +43,61 @@ export function VybeIcon({
 }) {
   return (
     <div
-      className={`relative inline-flex items-center justify-center bg-[#FFE229] border-[3px] border-[#111111] shadow-[3px_3px_0px_#111111] rounded-2xl select-none ${className}`}
+      className={`relative inline-flex items-center justify-center select-none group ${className}`}
       style={{ width: size, height: size }}
     >
-      <svg
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-3/4 h-3/4"
-      >
-        {/* Crown with loop shape */}
-        <path
-          d="M6 30L9 12L18 22L28 9L34 30H6Z"
-          fill="#FF5CA8"
-          stroke="#111111"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx="9" cy="12" r="2.5" fill="#111111" />
-        <circle cx="18" cy="22" r="2.5" fill="#111111" />
-        <circle cx="28" cy="9" r="2.5" fill="#111111" />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/vybe-logo.png"
+        alt="VYBE"
+        className="w-full h-full object-contain filter drop-shadow-[1.5px_1.5px_0px_#111111] transition-transform group-hover:rotate-6 group-hover:scale-110"
+      />
     </div>
   );
 }
 
-// Hand-drawn Neo-Brutalist "VYBE" wordmark
+// Full Wordmark with optional tagline
 export function VybeWordmark({
   size = 'md',
   showTagline = false,
   className = '',
 }: {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showTagline?: boolean;
   className?: string;
 }) {
-  const sizeClasses = {
-    sm: 'text-2xl',
-    md: 'text-3xl',
-    lg: 'text-4xl',
-    xl: 'text-5xl md:text-6xl',
-  };
-
   return (
     <div className={`inline-flex flex-col select-none ${className}`}>
-      <div className="flex items-center gap-2 group">
-        <VybeIcon
-          size={size === 'xl' ? 48 : size === 'lg' ? 42 : size === 'sm' ? 28 : 36}
-          className="transition-transform group-hover:rotate-6 group-hover:scale-105"
-        />
-
-        {/* Hand-drawn neo-brutalist letters */}
-        <span
-          className={`font-black tracking-tight text-[#111111] uppercase font-display ${sizeClasses[size]} flex items-center drop-shadow-[2px_2px_0px_#FFE229]`}
-        >
-          <span className="inline-block transform -rotate-3 hover:rotate-0 transition-transform">V</span>
-          <span className="inline-block transform rotate-2 text-[#FF5CA8] hover:scale-110 transition-transform">Y</span>
-          <span className="inline-block transform -rotate-1 text-[#55D6BE] hover:scale-110 transition-transform">B</span>
-          <span className="inline-block transform rotate-3 text-[#FF8A3D] hover:rotate-0 transition-transform">E</span>
-        </span>
-      </div>
+      <VybeLogo size={size} />
 
       {showTagline && (
-        <span className="font-bold text-[11px] text-[#111111] tracking-wide mt-0.5 ml-1 flex items-center gap-1 font-sans">
-          <span>Your music. Your vibe.</span>
-          <span className="text-xs">✦</span>
+        <span className="font-mono font-black text-[10px] text-[#111111] uppercase tracking-wider mt-1 flex items-center gap-1">
+          <span>YOUR MUSIC. YOUR VIBE.</span>
+          <span className="text-[#FF5CA8]">✦</span>
         </span>
       )}
     </div>
   );
 }
 
-export function LogoLink() {
+// Main Top/Sidebar Logo Link
+export function LogoLink({
+  size = 'md',
+  showTagline = false,
+}: {
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  showTagline?: boolean;
+}) {
   return (
-    <Link href="/" className="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#111111]">
-      <VybeWordmark showTagline size="md" />
+    <Link
+      href="/"
+      className="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] rounded-xl"
+    >
+      <VybeWordmark size={size} showTagline={showTagline} />
     </Link>
   );
 }
 
-// Aliases for compatibility
+// Backward compatibility aliases
 export const LoopaWordmark = VybeWordmark;
 export const LoopaIcon = VybeIcon;

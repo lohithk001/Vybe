@@ -132,7 +132,7 @@ export function Navbar() {
 
           {/* Profile Avatar Badge */}
           <Link
-            href="/library"
+            href="/profile"
             className="flex items-center gap-2 p-1 md:pr-3 rounded-full bg-[#FFFDF9] border-[2.5px] border-[#111111] shadow-[2.5px_2.5px_0px_#111111] hover:-translate-y-0.5 active:translate-y-0.5 transition-transform"
           >
             <div className="w-8 h-8 rounded-full bg-[#FFE229] border-2 border-[#111111] flex items-center justify-center overflow-hidden">

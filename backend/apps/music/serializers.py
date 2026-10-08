@@ -84,6 +84,7 @@ class SongSerializer(serializers.ModelSerializer):
     playCountFormatted = serializers.CharField(source='play_count_formatted', read_only=True)
     genres = GenreSerializer(many=True, read_only=True)
     moods = MoodSerializer(many=True, read_only=True)
+    isLiked = serializers.SerializerMethodField()
 
     class Meta:
         model = Song
@@ -106,7 +107,22 @@ class SongSerializer(serializers.ModelSerializer):
             'playCountFormatted',
             'genres',
             'moods',
+            'isLiked',
         ]
+
+    def get_isLiked(self, obj) -> bool:
+        request = self.context.get('request')
+        if not request or not request.user or not request.user.is_authenticated:
+            return False
+        liked_song_ids = self.context.get('liked_song_ids')
+        if liked_song_ids is not None:
+            obj_id = str(getattr(obj, 'id', ''))
+            obj_vid = getattr(obj, 'youtube_video_id', '')
+            return obj_id in liked_song_ids or obj_vid in liked_song_ids
+        from apps.music.models import LikedSong
+        if hasattr(obj, 'id'):
+            return LikedSong.objects.filter(user=request.user, song=obj).exists()
+        return False
 
 
 class ArtistDetailSerializer(serializers.ModelSerializer):
@@ -134,3 +150,30 @@ class ArtistDetailSerializer(serializers.ModelSerializer):
     def get_topSongs(self, obj):
         songs = obj.songs.filter(is_active=True).select_related('artist', 'album')[:10]
         return SongSerializer(songs, many=True).data
+
+
+class MoodDetailResponseSerializer(serializers.Serializer):
+    mood = MoodSerializer()
+    tracks = SongSerializer(many=True)
+
+
+class HomeBannerSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    title = serializers.CharField()
+    subtitle = serializers.CharField()
+    accentColor = serializers.CharField()
+    illustration = serializers.CharField()
+    badge = serializers.CharField()
+    actionType = serializers.CharField()
+    actionTarget = serializers.CharField()
+
+
+class HomeFeedResponseSerializer(serializers.Serializer):
+    greeting = serializers.CharField()
+    user = serializers.DictField(allow_null=True)
+    banner = HomeBannerSerializer()
+    trending = SongSerializer(many=True)
+    moods = MoodSerializer(many=True)
+    recentlyPlayed = SongSerializer(many=True)
+    quickPicks = SongSerializer(many=True)
+    playlists = serializers.ListField()

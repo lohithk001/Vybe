@@ -55,6 +55,9 @@ LOCAL_APPS = [
     'apps.core',
     'apps.users',
     'apps.music',
+    'apps.playlists',
+    'apps.history',
+    'apps.ai',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -174,6 +177,9 @@ REST_FRAMEWORK = {
         'user': '1000/minute',
         'auth': '30/minute',
         'search': '60/minute',
+        'trending': '120/minute',
+        'ai_dj': '20/minute',
+        'history': '120/minute',
     },
 }
 
@@ -218,3 +224,7 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Google Gemini AI Settings
+GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
+GEMINI_MODEL = env('GEMINI_MODEL', default='gemini-2.5-flash')

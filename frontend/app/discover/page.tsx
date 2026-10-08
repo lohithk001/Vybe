@@ -1,15 +1,47 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PLAYLISTS, ARTISTS, TRACKS } from '@/data/mockData';
+import { PLAYLISTS, ARTISTS } from '@/data/mockData';
+import { Track, Playlist } from '@/types/music';
+import { fetchTrendingTracks, fetchRecommendations } from '@/services/api';
 import { PlaylistCard } from '@/components/cards/PlaylistCard';
 import { SongRow } from '@/components/cards/SongRow';
 import { DoodleCrown, DoodleStar, HandwrittenNote } from '@/components/doodles/Doodles';
-import { Radio, Sparkles, Compass } from 'lucide-react';
+import { Radio, Sparkles, Compass, Flame } from 'lucide-react';
 import { TrackArtwork } from '@/components/doodles/OriginalIllustrations';
 
 export default function DiscoverPage() {
+  const [freshDrops, setFreshDrops] = useState<Track[]>([]);
+  const [viralRadar, setViralRadar] = useState<Track[]>([]);
+  const [curatedPlaylists, setCuratedPlaylists] = useState<Playlist[]>(PLAYLISTS);
+
+  useEffect(() => {
+    // Fetch live trending tracks
+    fetchTrendingTracks().then((items) => {
+      if (items && items.length > 0) {
+        setFreshDrops(items.slice(0, 8));
+        setViralRadar(items.slice(8, 16).length > 0 ? items.slice(8, 16) : items.slice(0, 8));
+      }
+    });
+
+    // Fetch real recommendations to enrich playlist crates
+    fetchRecommendations(20).then((recs) => {
+      if (recs && recs.length > 5) {
+        setCuratedPlaylists((prev) =>
+          prev.map((pl, idx) => {
+            const start = (idx * 4) % recs.length;
+            const slice = recs.slice(start, start + 5);
+            return {
+              ...pl,
+              tracks: slice.length > 0 ? slice : pl.tracks,
+            };
+          })
+        );
+      }
+    });
+  }, []);
+
   const genres = [
     { name: 'SYNTHWAVE', color: '#8E7CFF', tracks: '240k tracks' },
     { name: 'LO-FI BEATS', color: '#55D6BE', tracks: '580k tracks' },
@@ -31,15 +63,15 @@ export default function DiscoverPage() {
             <Compass className="w-8 h-8 text-[#FF5CA8]" />
           </div>
           <p className="font-sans font-bold text-xs md:text-sm text-[#111111]/70 mt-1">
-            Fresh sonic radar, underground currents, and community favorites.
+            Fresh sonic radar, underground currents, and live YouTube Music crates.
           </p>
         </div>
 
         <HandwrittenNote
-          text="100% FRESH CURATION"
+          text="100% REAL LIVE CURATION"
           color="#FFE229"
           rotation="-rotate-2"
-          className="self-start md:self-auto"
+          className="text-xs self-start md:self-auto"
         />
       </div>
 
@@ -63,7 +95,7 @@ export default function DiscoverPage() {
                 {g.name}
               </h3>
               <span className="font-mono text-[10px] font-bold uppercase text-[#111111]/80">
-                {g.tracks}
+                SEARCH →
               </span>
             </Link>
           ))}
@@ -80,12 +112,12 @@ export default function DiscoverPage() {
             <Radio className="w-6 h-6 text-[#111111]" />
           </div>
           <span className="font-mono text-xs font-bold text-[#111111]/70">
-            UPDATED DAILY
+            UPDATED HOURLY
           </span>
         </div>
 
         <div className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto pb-4 pt-1 px-0.5 no-scrollbar snap-x snap-mandatory">
-          {PLAYLISTS.map((pl) => (
+          {curatedPlaylists.map((pl) => (
             <div key={pl.id} className="snap-start flex-shrink-0">
               <PlaylistCard playlist={pl} />
             </div>
@@ -135,29 +167,72 @@ export default function DiscoverPage() {
         </div>
       </section>
 
-      {/* Fresh Underground Drops */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-black text-2xl md:text-3xl uppercase tracking-tight text-[#111111] flex items-center gap-2">
-            <span>FRESH DROPS</span>
-            <Sparkles className="w-5 h-5 text-[#FF5CA8]" />
-          </h2>
-          <span className="font-mono text-xs font-bold text-[#111111]/60">
-            THIS WEEK
-          </span>
-        </div>
+      {/* Grid: VIRAL RADAR & FRESH DROPS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left (6 cols): VIRAL RADAR 🔥 */}
+        <section className="lg:col-span-6 bg-[#FFFDF9] border-[3.5px] border-[#111111] shadow-brutal-md rounded-[26px] p-5">
+          <div className="flex items-center justify-between pb-3 mb-3 border-b-2 border-[#111111]/15">
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-[#FF8A3D] fill-[#FF8A3D]" />
+              <h2 className="font-display font-black text-xl md:text-2xl uppercase tracking-tight text-[#111111]">
+                VIRAL RADAR
+              </h2>
+            </div>
+            <span className="font-mono text-[10px] font-black uppercase bg-[#FFE229] px-2 py-0.5 rounded border border-[#111111]">
+              TOP CHARTS
+            </span>
+          </div>
 
-        <div className="space-y-2">
-          {TRACKS.slice(6, 12).map((track, idx) => (
-            <SongRow
-              key={track.id}
-              track={track}
-              index={idx}
-              playlistQueue={TRACKS.slice(6, 12)}
-            />
-          ))}
-        </div>
-      </section>
+          <div className="space-y-2">
+            {viralRadar.length > 0 ? (
+              viralRadar.map((track, idx) => (
+                <SongRow
+                  key={`viral-${track.id}`}
+                  track={track}
+                  index={idx}
+                  playlistQueue={viralRadar}
+                />
+              ))
+            ) : (
+              [...Array(5)].map((_, i) => (
+                <div key={i} className="h-14 bg-[#F5F0E6] rounded-xl border-2 border-[#111111]/20 animate-pulse" />
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Right (6 cols): FRESH DROPS ✦ */}
+        <section className="lg:col-span-6 bg-[#FFFDF9] border-[3.5px] border-[#111111] shadow-brutal-md rounded-[26px] p-5">
+          <div className="flex items-center justify-between pb-3 mb-3 border-b-2 border-[#111111]/15">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#FF5CA8]" />
+              <h2 className="font-display font-black text-xl md:text-2xl uppercase tracking-tight text-[#111111]">
+                FRESH DROPS
+              </h2>
+            </div>
+            <span className="font-mono text-[10px] font-black uppercase bg-[#55D6BE] px-2 py-0.5 rounded border border-[#111111]">
+              THIS WEEK
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {freshDrops.length > 0 ? (
+              freshDrops.map((track, idx) => (
+                <SongRow
+                  key={`fresh-${track.id}`}
+                  track={track}
+                  index={idx}
+                  playlistQueue={freshDrops}
+                />
+              ))
+            ) : (
+              [...Array(5)].map((_, i) => (
+                <div key={i} className="h-14 bg-[#F5F0E6] rounded-xl border-2 border-[#111111]/20 animate-pulse" />
+              ))
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

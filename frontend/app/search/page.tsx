@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, Flame, Music, Users, Disc, ListMusic } from 'lucide-react';
-import { TRACKS, PLAYLISTS, ARTISTS } from '@/data/mockData';
+import { Search, Flame, Music, Users, Disc, ListMusic, Loader2 } from 'lucide-react';
+import { PLAYLISTS, ARTISTS } from '@/data/mockData';
+import { Track } from '@/types/music';
+import { searchTracks, fetchTrendingTracks } from '@/services/api';
 import { SongRow } from '@/components/cards/SongRow';
 import { PlaylistCard } from '@/components/cards/PlaylistCard';
 import { DoodleSparkle } from '@/components/doodles/Doodles';
@@ -18,6 +20,8 @@ function SearchPageContent() {
   const [activeTab, setActiveTab] = useState<'trending' | 'songs' | 'artists' | 'albums' | 'playlists'>(
     initialTab as 'trending' | 'songs' | 'artists' | 'albums' | 'playlists'
   );
+  const [liveTracks, setLiveTracks] = useState<Track[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const trendingSearches = [
     'The Weeknd',
@@ -30,16 +34,46 @@ function SearchPageContent() {
     'Sabrina Carpenter',
   ];
 
-  const filteredTracks = useMemo(() => {
-    if (!query.trim()) return TRACKS;
-    const q = query.toLowerCase();
-    return TRACKS.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.artist.toLowerCase().includes(q) ||
-        t.album.toLowerCase().includes(q)
-    );
-  }, [query]);
+  // Fetch live tracks based on query or trending
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!query.trim()) {
+      setIsLoading(true);
+      fetchTrendingTracks().then((items) => {
+        if (!isCancelled && items && items.length > 0) {
+          setLiveTracks(items);
+          setIsLoading(false);
+        }
+      }).catch(() => {
+        if (!isCancelled) setIsLoading(false);
+      });
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    if (query.trim().length >= 2) {
+      setIsLoading(true);
+      const timer = setTimeout(() => {
+        searchTracks(query.trim(), activeTab === 'songs' ? 'songs' : 'songs').then((results) => {
+          if (!isCancelled) {
+            setLiveTracks(results);
+            setIsLoading(false);
+          }
+        }).catch(() => {
+          if (!isCancelled) setIsLoading(false);
+        });
+      }, 350);
+
+      return () => {
+        isCancelled = true;
+        clearTimeout(timer);
+      };
+    }
+  }, [query, activeTab]);
+
+  const filteredTracks = liveTracks;
 
   const filteredPlaylists = useMemo(() => {
     if (!query.trim()) return PLAYLISTS;
@@ -94,6 +128,9 @@ function SearchPageContent() {
           placeholder="Songs, artists, albums..."
           className="w-full bg-[#FFFDF9] border-[3.5px] border-[#111111] shadow-brutal-md rounded-[20px] pl-14 pr-5 py-4 font-sans font-bold text-base md:text-lg text-[#111111] placeholder:text-[#111111]/40 focus:outline-none focus:shadow-brutal-lg transition-all"
         />
+        {isLoading && (
+          <Loader2 className={`absolute ${query ? 'right-20' : 'right-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-[#FF5CA8] animate-spin`} />
+        )}
         {query && (
           <button
             onClick={() => setQuery('')}

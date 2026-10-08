@@ -235,6 +235,73 @@ class YTMusicProvider(MusicProvider):
             'tracks': tracks,
         }
 
+    def get_trending_songs(self, limit: int = 20) -> list[dict[str, Any]]:
+        """Fetch trending tracks via top charts or popular trending search."""
+        try:
+            charts = self._execute_with_retry("get_charts()", self.client.get_charts, country='US')
+            videos = charts.get('videos', [])
+            if videos and isinstance(videos, list):
+                first_pl_id = videos[0].get('playlistId')
+                if first_pl_id:
+                    pl = self._execute_with_retry(
+                        f"get_playlist({first_pl_id})",
+                        self.client.get_playlist,
+                        playlistId=first_pl_id,
+                        limit=limit,
+                    )
+                    raw_tracks = pl.get('tracks', [])
+                    normalized = []
+                    for t in raw_tracks[:limit]:
+                        s = self._normalize_song(t)
+                        if s:
+                            normalized.append(s)
+                    if normalized:
+                        return normalized
+        except Exception as e:
+            logger.warning(f"get_charts failed or empty, falling back to search: {e}")
+
+        return self.search(query="Top Hits 2025", filter_type='songs', limit=limit)
+
+    def get_mood_songs(self, mood_slug: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Fetch songs matching a mood category query."""
+        mood_query_map = {
+            'chill': 'chill lofi beats relax',
+            'lockin': 'synthwave cyberpunk focus electronic',
+            'mainchar': 'upbeat euphoric pop anthem',
+            'unhinged': 'hyperpop glitchcore high energy',
+            'focus': 'ambient piano deep concentration',
+            'party': 'party dance hits club bangers',
+            'sad': 'sad slow acoustic late night songs',
+            'workout': 'gym phonk high tempo hardstyle workout',
+        }
+        query = mood_query_map.get(mood_slug, f"{mood_slug} vibe songs")
+        return self.search(query=query, filter_type='songs', limit=limit)
+
+    def get_related_songs(self, video_id: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Fetch related songs (radio / up next) for a given video ID."""
+        try:
+            data = self._execute_with_retry(
+                f"get_watch_playlist({video_id})",
+                self.client.get_watch_playlist,
+                videoId=video_id,
+                limit=limit + 5,
+            )
+            raw_tracks = data.get('tracks', [])
+            normalized = []
+            for t in raw_tracks:
+                # Exclude seed track itself
+                if t.get('videoId') == video_id:
+                    continue
+                s = self._normalize_song(t)
+                if s:
+                    normalized.append(s)
+                if len(normalized) >= limit:
+                    break
+            return normalized
+        except Exception as e:
+            logger.warning(f"Failed to fetch related songs for {video_id}: {e}")
+            return []
+
     def _normalize_song(self, item: dict, default_album: dict | None = None) -> dict[str, Any] | None:
         video_id = item.get('videoId')
         if not video_id:
@@ -260,9 +327,9 @@ class YTMusicProvider(MusicProvider):
 
         duration_sec = item.get('duration_seconds')
         if not duration_sec:
-            duration_sec = parse_duration_to_seconds(item.get('duration'))
+            duration_sec = parse_duration_to_seconds(item.get('duration') or item.get('length'))
 
-        thumbnails = item.get('thumbnails', [])
+        thumbnails = item.get('thumbnails') or item.get('thumbnail') or []
         thumb_url = thumbnails[-1]['url'] if thumbnails else f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
 
         return {

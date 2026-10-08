@@ -36,7 +36,7 @@ export function SongRow({
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleLike(track.id);
+    toggleLike(track.id, track);
   };
 
   return (
@@ -69,12 +69,21 @@ export function SongRow({
           className="relative w-12 h-12 rounded-xl border-2 border-[#111111] shadow-[2px_2px_0px_#111111] overflow-hidden flex-shrink-0 flex items-center justify-center"
           style={{ backgroundColor: track.accentColor }}
         >
-          <TrackArtwork
-            type={track.illustration}
-            color={track.accentColor}
-            isPlaying={isThisPlaying}
-            className="w-full h-full scale-110"
-          />
+          {track.thumbnailUrl ? (
+            <img
+              src={track.thumbnailUrl}
+              alt={track.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <TrackArtwork
+              type={track.illustration}
+              color={track.accentColor}
+              isPlaying={isThisPlaying}
+              className="w-full h-full scale-110"
+            />
+          )}
 
           {/* Hover overlay play icon */}
           <div

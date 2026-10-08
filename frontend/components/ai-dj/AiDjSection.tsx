@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Play, Wand2 } from 'lucide-react';
 import { DjMascot } from '@/components/doodles/OriginalIllustrations';
-import { TRACKS } from '@/data/mockData';
+import { generateAiDjCrate } from '@/services/api';
 import { Track } from '@/types/music';
 import { SongRow } from '@/components/cards/SongRow';
 import { useMusicPlayer } from '@/context/MusicPlayerContext';
@@ -14,13 +14,7 @@ export function AiDjSection() {
   const [prompt, setPrompt] = useState('Give me songs for a late-night coding session');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedTitle, setGeneratedTitle] = useState('LATE NIGHT CODING FLOW');
-  const [generatedTracks, setGeneratedTracks] = useState<Track[]>([
-    TRACKS[5], // After Dark
-    TRACKS[6], // Nights
-    TRACKS[10], // Midnight City
-    TRACKS[8], // Sweater Weather
-    TRACKS[14], // 505
-  ]);
+  const [generatedTracks, setGeneratedTracks] = useState<Track[]>([]);
 
   const suggestedMoods = [
     { label: 'FOCUS', color: '#FFE229', query: 'Deep focus binaural beats for nonstop programming' },
@@ -31,37 +25,19 @@ export function AiDjSection() {
     { label: 'PARTY', color: '#FF5CA8', query: 'Unhinged chaotic bass boosted dance bangers' },
   ];
 
-  const handleGenerate = (customPrompt?: string) => {
+  const handleGenerate = async (customPrompt?: string) => {
     const activeQuery = customPrompt || prompt;
     if (!activeQuery.trim()) return;
 
+    if (customPrompt) setPrompt(customPrompt);
     setIsGenerating(true);
 
-    setTimeout(() => {
-      // Deterministically match or shuffle tracks based on mood
-      let newTracks: Track[] = [];
-      const lower = activeQuery.toLowerCase();
-
-      if (lower.includes('coding') || lower.includes('focus')) {
-        setGeneratedTitle('LATE NIGHT CODING FLOW');
-        newTracks = [TRACKS[5], TRACKS[6], TRACKS[10], TRACKS[8], TRACKS[14]];
-      } else if (lower.includes('gym') || lower.includes('motivation') || lower.includes('workout')) {
-        setGeneratedTitle('IRON PARADISE ADRENALINE');
-        newTracks = [TRACKS[3], TRACKS[12], TRACKS[0], TRACKS[7]];
-      } else if (lower.includes('party') || lower.includes('unhinged') || lower.includes('dance')) {
-        setGeneratedTitle('CHAOTIC BASEMENT PARTY');
-        newTracks = [TRACKS[2], TRACKS[9], TRACKS[12], TRACKS[7]];
-      } else if (lower.includes('sad') || lower.includes('heartbreak') || lower.includes('cry')) {
-        setGeneratedTitle('TEARS IN THE SHOWER');
-        newTracks = [TRACKS[4], TRACKS[11], TRACKS[1], TRACKS[6]];
-      } else {
-        setGeneratedTitle('CUSTOM CURATED FREQUENCIES');
-        newTracks = [...TRACKS].sort(() => 0.5 - Math.random()).slice(0, 5);
+    try {
+      const res = await generateAiDjCrate(activeQuery);
+      setGeneratedTitle(res.commentary);
+      if (res.tracks && res.tracks.length > 0) {
+        setGeneratedTracks(res.tracks);
       }
-
-      setGeneratedTracks(newTracks);
-      setIsGenerating(false);
-
       try {
         confetti({
           particleCount: 50,
@@ -70,10 +46,19 @@ export function AiDjSection() {
           colors: ['#FFE229', '#8E7CFF', '#55D6BE', '#FF5CA8'],
         });
       } catch {
-        // fallback
+        // confetti fallback
       }
-    }, 900);
+    } catch (err) {
+      console.warn('AI DJ error:', err);
+    } finally {
+      setIsGenerating(false);
+    }
   };
+
+  useEffect(() => {
+    handleGenerate('Give me songs for a late-night coding session');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePlayAllGenerated = () => {
     if (generatedTracks.length > 0) {
@@ -186,16 +171,24 @@ export function AiDjSection() {
           </button>
         </div>
 
-        <div className="space-y-2">
-          {generatedTracks.map((track, idx) => (
-            <SongRow
-              key={track.id}
-              track={track}
-              index={idx}
-              playlistQueue={generatedTracks}
-            />
-          ))}
-        </div>
+        {generatedTracks.length > 0 ? (
+          <div className="space-y-2">
+            {generatedTracks.map((track, idx) => (
+              <SongRow
+                key={track.id}
+                track={track}
+                index={idx}
+                playlistQueue={generatedTracks}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center bg-[#F5F0E6] rounded-2xl border-2 border-dashed border-[#111111]/30">
+            <p className="font-display font-black text-sm uppercase text-[#111111]">
+              {isGenerating ? 'SUMMONING LIVE TRACKS FROM THE SOUND MATRIX...' : 'CLICK GENERATE TO DROP YOUR CUSTOM CRATE'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

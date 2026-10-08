@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Sparkles, Library } from 'lucide-react';
+import { Home, Search, Sparkles, Library, User } from 'lucide-react';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -13,6 +13,7 @@ export function BottomNav() {
     { name: 'Search', href: '/search', icon: Search, accent: '#55D6BE' },
     { name: 'AI DJ', href: '/ai-dj', icon: Sparkles, accent: '#8E7CFF' },
     { name: 'Library', href: '/library', icon: Library, accent: '#FF5CA8' },
+    { name: 'Profile', href: '/profile', icon: User, accent: '#6DB7FF' },
   ];
 
   return (

@@ -1,0 +1,1476 @@
+openapi: 3.0.3
+info:
+  title: VYBE Music API
+  version: v1
+  description: Gen-Z Music Discovery Engine REST API
+paths:
+  /api/v1/ai/dj/:
+    post:
+      operationId: ai_dj_generate_session
+      description: Generates an AI DJ session with commentary, mood styling, and a
+        playable track list matching the listener's prompt.
+      summary: Generate AI DJ Session
+      tags:
+      - ai
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIDJRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AIDJRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AIDJRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIDJResponse'
+          description: ''
+        '400':
+          description: Invalid prompt
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: Authenticate listener with email and password to receive JWT credentials.
+      summary: User Login
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Authentication successful
+        '401':
+          description: Invalid credentials
+  /api/v1/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Revoke and blacklist current refresh token.
+      summary: User Logout
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Logged out
+        '400':
+          description: Invalid token
+  /api/v1/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      description: Retrieve profile and preferences of the authenticated listener.
+      summary: Get Current Profile
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: auth_me_partial_update
+      description: Update display name, avatar, bio, or mood preferences.
+      summary: Update Profile
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateProfileRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: Submit refresh token to obtain a fresh short-lived access token.
+      summary: Refresh Access Token
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Token refreshed
+        '401':
+          description: Invalid or expired token
+  /api/v1/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: Create a new listener account and return JWT credentials with profile.
+      summary: Register Account
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Validation error
+  /api/v1/health/:
+    get:
+      operationId: health_retrieve
+      description: Verify backend service, database, and cache health.
+      summary: Health Check
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          description: Service is healthy
+        '503':
+          description: Service is degraded or unhealthy
+  /api/v1/history/:
+    get:
+      operationId: history_list
+      description: Retrieve paginated listening history for current user.
+      summary: List Listening History
+      tags:
+      - history
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListeningHistory'
+          description: ''
+    post:
+      operationId: history_create
+      description: Log an event-based song play. Increments track play count and listener
+        minutes.
+      summary: Record Play Event
+      tags:
+      - history
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordPlayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecordPlayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecordPlayRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListeningHistory'
+          description: ''
+    delete:
+      operationId: history_destroy
+      description: Clear all listening history entries for current user.
+      summary: Clear Listening History
+      tags:
+      - history
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: History cleared
+  /api/v1/home/:
+    get:
+      operationId: home_feed
+      description: Composed home payload containing greeting, hero banner, trending
+        tracks, mood crates, recently played history, quick picks, and playlists.
+      summary: Get Home Dashboard Feed
+      tags:
+      - home
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeFeedResponse'
+          description: ''
+  /api/v1/me/liked-songs/:
+    get:
+      operationId: me_liked_songs_retrieve
+      description: Retrieve paginated list of songs saved to listener library.
+      summary: Get Liked Songs
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Liked songs list
+  /api/v1/music/albums/{id}/:
+    get:
+      operationId: music_albums_retrieve
+      description: Retrieve album metadata and track list by provider ID.
+      summary: Get Album Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Album details found
+        '404':
+          description: Album not found
+  /api/v1/music/artists/{id}/:
+    get:
+      operationId: music_artists_retrieve
+      description: Retrieve artist profile, bio, top tracks, and albums by provider
+        ID.
+      summary: Get Artist Profile
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Artist details found
+        '404':
+          description: Artist not found
+  /api/v1/music/moods/:
+    get:
+      operationId: music_moods_list
+      description: Retrieve all available Gen-Z mood categories with illustrations
+        and accent colors.
+      summary: Get Moods
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mood'
+          description: ''
+  /api/v1/music/moods/{slug}/songs/:
+    get:
+      operationId: music_mood_songs
+      description: Retrieve curated tracks belonging to a specific mood category.
+      summary: Get Mood Tracks
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 20
+        description: 'Maximum number of tracks to return (default: 20)'
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoodDetailResponse'
+          description: ''
+        '404':
+          description: Mood not found
+  /api/v1/music/recommendations/:
+    get:
+      operationId: music_recommendations_list
+      description: Generates heuristic-scored music recommendations based on user
+        history, liked songs, preferred moods, or seed track/mood.
+      summary: Get Personalized Recommendations
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 20
+        description: 'Maximum number of recommendations (default: 20)'
+      - in: query
+        name: mood
+        schema:
+          type: string
+        description: Optional mood filter/boost (e.g. chill, lockin, mainchar)
+      - in: query
+        name: seed_song_id
+        schema:
+          type: string
+        description: Optional seed YouTube video ID to base recommendations around
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+          description: ''
+  /api/v1/music/search/:
+    get:
+      operationId: music_search_retrieve
+      description: Search for songs, artists, or albums. Results are cached in Redis.
+      summary: Search Music
+      parameters:
+      - in: query
+        name: filter
+        schema:
+          type: string
+          enum:
+          - albums
+          - artists
+          - songs
+          default: songs
+        description: Filter results by type
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Search query term
+        required: true
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Search results retrieved
+        '400':
+          description: Query term missing or too short
+  /api/v1/music/songs/{id}/:
+    get:
+      operationId: music_songs_retrieve
+      description: Retrieve normalized metadata for a song by YouTube video ID.
+      summary: Get Song Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Song metadata found
+        '404':
+          description: Song not found
+  /api/v1/music/songs/{id}/like/:
+    post:
+      operationId: music_like_song
+      description: Like a song by YouTube video ID or database UUID.
+      summary: Like Song
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Song liked
+    delete:
+      operationId: music_unlike_song
+      description: Remove song from listener's liked songs.
+      summary: Unlike Song
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Song unliked
+  /api/v1/music/songs/{id}/similar/:
+    get:
+      operationId: music_song_similar
+      description: Retrieve similar tracks and up next queue for a given YouTube video
+        ID.
+      summary: Get Similar Tracks (Track Radio)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 20
+        description: 'Maximum number of similar tracks (default: 20)'
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+          description: ''
+  /api/v1/music/trending/:
+    get:
+      operationId: music_trending_list
+      description: Retrieve curated and top trending tracks with Redis caching.
+      summary: Get Trending Tracks
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 20
+        description: 'Maximum number of tracks to return (default: 20)'
+      tags:
+      - music
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+          description: ''
+  /api/v1/playlists/:
+    get:
+      operationId: playlists_list
+      description: List public curated playlists and user crates.
+      summary: List Playlists
+      tags:
+      - playlists
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlaylistSummary'
+          description: ''
+    post:
+      operationId: playlists_create
+      description: Create a new custom crate for the authenticated listener.
+      summary: Create Playlist
+      tags:
+      - playlists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlaylistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreatePlaylistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreatePlaylistRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistSummary'
+          description: ''
+  /api/v1/playlists/{id}/:
+    get:
+      operationId: playlists_retrieve
+      description: Retrieve playlist metadata with ordered track list.
+      summary: Get Playlist Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - playlists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetail'
+          description: ''
+    patch:
+      operationId: playlists_partial_update
+      description: Update playlist title, description, accent color, or cover illustration.
+      summary: Update Playlist
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - playlists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCreatePlaylistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCreatePlaylistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCreatePlaylistRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistSummary'
+          description: ''
+    delete:
+      operationId: playlists_destroy
+      description: Delete a user-owned playlist crate.
+      summary: Delete Playlist
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - playlists
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: Deleted
+  /api/v1/playlists/{id}/reorder/:
+    post:
+      operationId: playlists_reorder_create
+      description: Reorder songs inside playlist crate by supplying ordered array
+        of IDs.
+      summary: Reorder Playlist Songs
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - playlists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderPlaylistSongsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReorderPlaylistSongsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReorderPlaylistSongsRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetail'
+          description: ''
+  /api/v1/playlists/{id}/songs/:
+    post:
+      operationId: playlist_add_song
+      description: Add a track to playlist crate. Persists track if needed.
+      summary: Add Song to Playlist
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - playlists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSongToPlaylistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddSongToPlaylistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddSongToPlaylistRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetail'
+          description: ''
+  /api/v1/playlists/{id}/songs/{song_id}/:
+    delete:
+      operationId: playlist_remove_song
+      description: Remove a track entry from the playlist.
+      summary: Remove Song from Playlist
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: song_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - playlists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetail'
+          description: ''
+components:
+  schemas:
+    AIDJRequestRequest:
+      type: object
+      properties:
+        prompt:
+          type: string
+          minLength: 2
+          description: Describe the vibe, feeling, activity, or scenario for DJ VYBE
+            to curate.
+          maxLength: 500
+        mood:
+          type: string
+          nullable: true
+          description: Optional mood category override (e.g. chill, lockin, mainchar,
+            unhinged).
+        limit:
+          type: integer
+          maximum: 25
+          minimum: 1
+          default: 10
+          description: 'Number of tracks to assemble (default: 10, max: 25).'
+      required:
+      - prompt
+    AIDJResponse:
+      type: object
+      properties:
+        sessionTitle:
+          type: string
+        djCommentary:
+          type: string
+        detectedMood:
+          type: string
+        accentColor:
+          type: string
+        illustration:
+          type: string
+        suggestedArtists:
+          type: array
+          items:
+            type: string
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+      required:
+      - accentColor
+      - detectedMood
+      - djCommentary
+      - illustration
+      - sessionTitle
+      - tracks
+    AddSongToPlaylistRequest:
+      type: object
+      properties:
+        youtubeVideoId:
+          type: string
+          minLength: 1
+        youtube_video_id:
+          type: string
+          minLength: 1
+    AlbumSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        providerId:
+          type: string
+        title:
+          type: string
+          maxLength: 255
+        thumbnailUrl:
+          type: string
+          format: uri
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+      required:
+      - id
+      - providerId
+      - thumbnailUrl
+      - title
+    ArtistSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        providerId:
+          type: string
+        name:
+          type: string
+          maxLength: 255
+        thumbnailUrl:
+          type: string
+          format: uri
+        avatarColor:
+          type: string
+      required:
+      - avatarColor
+      - id
+      - name
+      - providerId
+      - thumbnailUrl
+    CreatePlaylistRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        accentColor:
+          type: string
+          minLength: 1
+          default: '#8E7CFF'
+        illustration:
+          type: string
+          minLength: 1
+          default: vinyl
+        isPublic:
+          type: boolean
+          default: true
+      required:
+      - title
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - name
+      - slug
+    HomeBanner:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        accentColor:
+          type: string
+        illustration:
+          type: string
+        badge:
+          type: string
+        actionType:
+          type: string
+        actionTarget:
+          type: string
+      required:
+      - accentColor
+      - actionTarget
+      - actionType
+      - badge
+      - id
+      - illustration
+      - subtitle
+      - title
+    HomeFeedResponse:
+      type: object
+      properties:
+        greeting:
+          type: string
+        user:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        banner:
+          $ref: '#/components/schemas/HomeBanner'
+        trending:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+        moods:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mood'
+        recentlyPlayed:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+        quickPicks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+        playlists:
+          type: array
+          items: {}
+      required:
+      - banner
+      - greeting
+      - moods
+      - playlists
+      - quickPicks
+      - recentlyPlayed
+      - trending
+      - user
+    IllustrationEnum:
+      enum:
+      - chill
+      - lockin
+      - mainchar
+      - unhinged
+      - vinyl
+      - cassette
+      - lofi
+      - retro
+      type: string
+      description: |-
+        * `chill` - Chill
+        * `lockin` - Lock In
+        * `mainchar` - Main Character
+        * `unhinged` - Unhinged
+        * `vinyl` - Vinyl
+        * `cassette` - Cassette
+        * `lofi` - Lo-Fi
+        * `retro` - Retro
+    ListeningHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        song:
+          allOf:
+          - $ref: '#/components/schemas/Song'
+          readOnly: true
+        durationListenedSeconds:
+          type: integer
+          readOnly: true
+        completed:
+          type: boolean
+        playedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - durationListenedSeconds
+      - id
+      - playedAt
+      - song
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    Mood:
+      type: object
+      properties:
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        title:
+          type: string
+          maxLength: 100
+        subtitle:
+          type: string
+          maxLength: 200
+        accentColor:
+          type: string
+        bgClass:
+          type: string
+        rotation:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+        illustration:
+          type: string
+          maxLength: 50
+      required:
+      - accentColor
+      - bgClass
+      - slug
+      - title
+    MoodDetailResponse:
+      type: object
+      properties:
+        mood:
+          $ref: '#/components/schemas/Mood'
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+      required:
+      - mood
+      - tracks
+    PatchedCreatePlaylistRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        accentColor:
+          type: string
+          minLength: 1
+          default: '#8E7CFF'
+        illustration:
+          type: string
+          minLength: 1
+          default: vinyl
+        isPublic:
+          type: boolean
+          default: true
+    PatchedUpdateProfileRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 100
+        avatarColor:
+          type: string
+          minLength: 1
+          maxLength: 20
+        avatarUrl:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        bio:
+          type: string
+          maxLength: 500
+        preferredMoods:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        favoriteGenres:
+          type: array
+          items:
+            type: string
+            minLength: 1
+    PlaylistDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        author:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        accentColor:
+          type: string
+        illustration:
+          $ref: '#/components/schemas/IllustrationEnum'
+        trackCount:
+          type: integer
+          readOnly: true
+        duration:
+          type: string
+          readOnly: true
+        isCurated:
+          type: boolean
+          readOnly: true
+        isPublic:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        tracks:
+          type: array
+          items: {}
+          readOnly: true
+      required:
+      - accentColor
+      - author
+      - createdAt
+      - duration
+      - id
+      - isCurated
+      - isPublic
+      - title
+      - trackCount
+      - tracks
+      - updatedAt
+    PlaylistSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        author:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        accentColor:
+          type: string
+        illustration:
+          $ref: '#/components/schemas/IllustrationEnum'
+        trackCount:
+          type: integer
+          readOnly: true
+        duration:
+          type: string
+          readOnly: true
+        isCurated:
+          type: boolean
+          readOnly: true
+        isPublic:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - accentColor
+      - author
+      - createdAt
+      - duration
+      - id
+      - isCurated
+      - isPublic
+      - title
+      - trackCount
+      - updatedAt
+    Profile:
+      type: object
+      properties:
+        preferredMoods:
+          type: array
+          items:
+            type: string
+        favoriteGenres:
+          type: array
+          items:
+            type: string
+        listeningTimeMinutes:
+          type: integer
+          readOnly: true
+      required:
+      - listeningTimeMinutes
+    RecordPlayRequest:
+      type: object
+      properties:
+        youtubeVideoId:
+          type: string
+          minLength: 1
+        youtube_video_id:
+          type: string
+          minLength: 1
+        durationListenedSeconds:
+          type: integer
+        duration_listened_seconds:
+          type: integer
+        completed:
+          type: boolean
+          default: false
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        username:
+          type: string
+          minLength: 1
+          maxLength: 50
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        displayName:
+          type: string
+          maxLength: 100
+        avatarColor:
+          type: string
+          minLength: 1
+          default: '#FF5CA8'
+          maxLength: 20
+      required:
+      - email
+      - password
+      - username
+    ReorderPlaylistSongsRequest:
+      type: object
+      properties:
+        songIds:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+      required:
+      - songIds
+    Song:
+      type: object
+      description: |-
+        Normalized Song contract:
+        {
+            "id": "...",
+            "youtube_video_id": "...",
+            "title": "...",
+            "artist": { "id": "...", "name": "..." },
+            "album": { "id": "...", "name": "..." },
+            "thumbnail_url": "...",
+            "duration_seconds": 210,
+            ...
+        }
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        youtube_video_id:
+          type: string
+        youtubeVideoId:
+          type: string
+        title:
+          type: string
+          maxLength: 255
+        artist:
+          allOf:
+          - $ref: '#/components/schemas/ArtistSummary'
+          readOnly: true
+        album:
+          allOf:
+          - $ref: '#/components/schemas/AlbumSummary'
+          readOnly: true
+        thumbnail_url:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        duration_seconds:
+          type: integer
+        durationSeconds:
+          type: integer
+        durationFormatted:
+          type: string
+          readOnly: true
+        accentColor:
+          type: string
+        illustration:
+          $ref: '#/components/schemas/IllustrationEnum'
+        bpm:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        playCount:
+          type: integer
+          readOnly: true
+        playCountFormatted:
+          type: string
+          readOnly: true
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/Genre'
+          readOnly: true
+        moods:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mood'
+          readOnly: true
+        isLiked:
+          type: boolean
+          readOnly: true
+      required:
+      - accentColor
+      - album
+      - artist
+      - durationFormatted
+      - durationSeconds
+      - duration_seconds
+      - genres
+      - id
+      - isLiked
+      - moods
+      - playCount
+      - playCountFormatted
+      - thumbnailUrl
+      - thumbnail_url
+      - title
+      - youtubeVideoId
+      - youtube_video_id
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        username:
+          type: string
+          maxLength: 50
+        displayName:
+          type: string
+          readOnly: true
+        avatarColor:
+          type: string
+          readOnly: true
+        avatarUrl:
+          type: string
+          format: uri
+          readOnly: true
+        bio:
+          type: string
+          maxLength: 500
+        profile:
+          allOf:
+          - $ref: '#/components/schemas/Profile'
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - avatarColor
+      - avatarUrl
+      - createdAt
+      - displayName
+      - email
+      - id
+      - profile
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,8 +1,10 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ARTISTS, TRACKS } from '@/data/mockData';
+import { ARTISTS } from '@/data/mockData';
+import { Track } from '@/types/music';
+import { searchTracks } from '@/services/api';
 import { useMusicPlayer } from '@/context/MusicPlayerContext';
 import { SongRow } from '@/components/cards/SongRow';
 import { TrackArtwork } from '@/components/doodles/OriginalIllustrations';
@@ -22,8 +24,15 @@ export default function ArtistPage({
     ARTISTS.find((a) => a.id === id) ||
     ARTISTS[0];
 
-  const artistTracks = TRACKS.filter((t) => t.artistId === artist.id || t.artist.includes(artist.name));
-  const displayTracks = artistTracks.length > 0 ? artistTracks : artist.topTracks;
+  const [displayTracks, setDisplayTracks] = useState<Track[]>(artist.topTracks || []);
+
+  useEffect(() => {
+    searchTracks(artist.name, 'songs').then((results) => {
+      if (results && results.length > 0) {
+        setDisplayTracks(results);
+      }
+    });
+  }, [artist.name]);
 
   const handlePlayArtist = () => {
     if (displayTracks.length > 0) {
@@ -142,14 +151,20 @@ export default function ArtistPage({
         </div>
 
         <div className="space-y-2">
-          {displayTracks.map((track, idx) => (
-            <SongRow
-              key={track.id}
-              track={track}
-              index={idx}
-              playlistQueue={displayTracks}
-            />
-          ))}
+          {displayTracks.length > 0 ? (
+            displayTracks.map((track, idx) => (
+              <SongRow
+                key={track.id}
+                track={track}
+                index={idx}
+                playlistQueue={displayTracks}
+              />
+            ))
+          ) : (
+            [...Array(5)].map((_, i) => (
+              <div key={i} className="h-14 bg-[#F5F0E6] rounded-xl border-2 border-[#111111]/20 animate-pulse" />
+            ))
+          )}
         </div>
       </section>
     </div>

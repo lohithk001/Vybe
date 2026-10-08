@@ -150,3 +150,20 @@ export function DoodleNote({ className = 'w-5 h-5', fill = '#FF5CA8' }: { classN
     </svg>
   );
 }
+
+// Doodle Lightning Bolt
+export function DoodleLightning({ className = 'w-5 h-5', fill = '#FFE229' }: { className?: string; fill?: string }) {
+  return (
+    <svg viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <path
+        d="M13 2L3 14H11L9 26L21 12H13L15 2H13Z"
+        fill={fill}
+        stroke="#111111"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+

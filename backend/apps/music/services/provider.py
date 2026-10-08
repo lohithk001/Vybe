@@ -36,3 +36,18 @@ class MusicProvider(ABC):
     def get_album(self, album_id: str) -> dict[str, Any] | None:
         """Fetch normalized album details and track list."""
         pass
+
+    @abstractmethod
+    def get_trending_songs(self, limit: int = 20) -> list[dict[str, Any]]:
+        """Fetch trending songs list."""
+        pass
+
+    @abstractmethod
+    def get_mood_songs(self, mood_slug: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Fetch songs matching a specific mood query."""
+        pass
+
+    @abstractmethod
+    def get_related_songs(self, video_id: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Fetch related songs (track radio / similar tracks) for a given video ID."""
+        pass
