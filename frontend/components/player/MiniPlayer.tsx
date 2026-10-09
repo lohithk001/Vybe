@@ -17,13 +17,15 @@ export function MiniPlayer() {
     setIsNowPlayingOpen,
   } = useMusicPlayer();
 
+  if (!currentTrack || !currentTrack.id) return null;
+
   const liked = isLiked(currentTrack.id);
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
   return (
     <div
       onClick={() => setIsNowPlayingOpen(true)}
-      className="lg:hidden fixed bottom-[calc(66px+env(safe-area-inset-bottom,4px))] left-3 right-3 z-40 bg-[#FFFDF9] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] rounded-2xl p-2.5 flex items-center justify-between cursor-pointer select-none active:scale-[0.98] transition-transform overflow-hidden"
+      className="lg:hidden fixed bottom-[calc(66px+env(safe-area-inset-bottom,4px))] left-3 right-3 z-40 bg-[#FFFDF9] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] rounded-2xl p-2.5 flex items-center justify-between cursor-pointer select-none active:scale-[0.98] transition-transform overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
     >
       {/* Top Edge Progress Line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-[#111111]/15">

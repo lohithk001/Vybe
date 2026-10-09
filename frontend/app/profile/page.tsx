@@ -463,6 +463,19 @@ export default function ProfilePage() {
                   </>
                 )}
               </button>
+
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined' && (window as any).replayVybeSplash) {
+                    (window as any).replayVybeSplash();
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-[2.5px] border-[#111111] bg-[#FFE229] shadow-[2.5px_2.5px_0px_#111111] hover:bg-[#8E7CFF] hover:text-white active:translate-x-0.5 active:translate-y-0.5 font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all"
+                title="Replay the explosive opening animation"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>REPLAY INTRO 🎬</span>
+              </button>
             </div>
           </div>
         </div>

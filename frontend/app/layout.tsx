@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MusicPlayer } from '@/components/player/MusicPlayer';
 import { MiniPlayer } from '@/components/player/MiniPlayer';
 import { NowPlayingModal } from '@/components/player/NowPlayingModal';
+import { AppOpeningSplash } from '@/components/splash/AppOpeningSplash';
 
 export const metadata: Metadata = {
   title: 'VYBE ✦ Your music. Your vibe.',
@@ -27,6 +28,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-[#F5F0E6] text-[#111111] min-h-screen flex flex-col antialiased selection:bg-[#FFE229] selection:text-[#111111]">
         <MusicPlayerProvider>
+          {/* App Opening Splash Animation */}
+          <AppOpeningSplash />
+
           <div className="flex min-h-screen w-full">
             {/* Desktop Left Sidebar */}
             <Sidebar />

@@ -91,3 +91,71 @@ body {
   background: rgba(255, 255, 255, 0.7);
   border: 1px dashed rgba(17, 17, 17, 0.4);
 }
+
+/* Vinyl Sheen Light Sweep */
+@keyframes vinyl-sheen {
+  0% { transform: rotate(0deg); opacity: 0.25; }
+  50% { opacity: 0.45; }
+  100% { transform: rotate(360deg); opacity: 0.25; }
+}
+.animate-vinyl-sheen {
+  animation: vinyl-sheen 6s linear infinite;
+}
+
+/* Floating Gentle Levitation */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(-0.5deg); }
+  50% { transform: translateY(-7px) rotate(1deg); }
+}
+.animate-float-gentle {
+  animation: float-gentle 3.5s ease-in-out infinite;
+}
+
+/* Comic Shockwave Ring */
+@keyframes comic-shockwave {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  50% { opacity: 0.6; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+.animate-comic-shockwave {
+  animation: comic-shockwave 0.65s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+/* Living Equalizer EQ Waves */
+@keyframes eq-dance-a {
+  0%, 100% { height: 18%; }
+  50% { height: 96%; }
+}
+@keyframes eq-dance-b {
+  0%, 100% { height: 75%; }
+  50% { height: 28%; }
+}
+@keyframes eq-dance-c {
+  0%, 100% { height: 40%; }
+  50% { height: 100%; }
+}
+.animate-eq-a { animation: eq-dance-a 0.75s ease-in-out infinite; }
+.animate-eq-b { animation: eq-dance-b 0.55s ease-in-out infinite 0.1s; }
+.animate-eq-c { animation: eq-dance-c 0.9s ease-in-out infinite 0.2s; }
+
+/* Comic Speed Lines Pulse */
+@keyframes speed-pulse {
+  0% { opacity: 0.15; transform: scale(0.96); }
+  50% { opacity: 0.4; transform: scale(1.04); }
+  100% { opacity: 0.15; transform: scale(0.96); }
+}
+.animate-speed-pulse {
+  animation: speed-pulse 2s ease-in-out infinite;
+}
+
+/* Floating Music Notes & Doodles */
+@keyframes float-upward {
+  0% { transform: translateY(10px) rotate(0deg); opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.7; }
+  100% { transform: translateY(-35px) rotate(15deg); opacity: 0; }
+}
+.animate-float-upward {
+  animation: float-upward 4s ease-in-out infinite;
+}
+
